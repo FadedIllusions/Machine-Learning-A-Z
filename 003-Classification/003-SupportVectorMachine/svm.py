@@ -1,0 +1,96 @@
+# -*- coding: utf-8 -*-
+
+# Support Vector Machine
+# Draws an equidistant classification boundary between the chosen
+# support vector (points)... Id est, a 'maximum margin' boundary within
+# a hyperplane.
+
+# Importing the libraries
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+# Importing the dataset
+dataset = pd.read_csv('Social_Network_Ads.csv')
+X = dataset.iloc[:, [2, 3]].values
+y = dataset.iloc[:, 4].values
+
+# Splitting the dataset into the Training set and Test set
+from sklearn.cross_validation import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.25, random_state = 0)
+
+# Feature Scaling
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+X_train = sc.fit_transform(X_train)
+X_test = sc.transform(X_test)
+
+# Fitting SVM to the Training set
+from sklearn.svm import SVC
+classifier = SVC(kernel='linear', random_state=0)
+classifier.fit(X_train, y_train)
+
+
+# Predicting the Test set results
+y_pred = classifier.predict(X_test)
+
+# Making the Confusion Matrix
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(y_test, y_pred)
+
+# Type in 'cm' in console to print confusion matrix
+# ([66, 2]  66+24 = 90 (Correct Predictions)
+#  [8, 24]) 8+2 = 10 (Incorrect Predictions)
+
+# Visualising the Training set results
+from matplotlib.colors import ListedColormap
+X_set, y_set = X_train, y_train
+X1, X2 = np.meshgrid(np.arange(start = X_set[:, 0].min() - 1, stop = X_set[:, 0].max() + 1, step = 0.01),
+                     np.arange(start = X_set[:, 1].min() - 1, stop = X_set[:, 1].max() + 1, step = 0.01))
+plt.contourf(X1, X2, classifier.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
+             alpha = 0.75, cmap = ListedColormap(('red', 'green')))
+plt.xlim(X1.min(), X1.max())
+plt.ylim(X2.min(), X2.max())
+for i, j in enumerate(np.unique(y_set)):
+    plt.scatter(X_set[y_set == j, 0], X_set[y_set == j, 1],
+                c = ListedColormap(('red', 'green'))(i), label = j)
+plt.title('Support Vector Machine (Training set)')
+plt.xlabel('Age')
+plt.ylabel('Estimated Salary')
+plt.legend()
+plt.show()
+
+## ---  --  - Interpretting the Visualization -  --  --- ##
+#
+# Red Dots (Didn't Buy), Green Dots (Did Buy)
+# Colored Sections of Graph = 'Prediction Regions' (Most Likely)
+# Thus, the dots represent the 'true' buyers and regions represent 
+# classified/predicted regions of those that won't buy and will buy.
+
+# Visualising the Test set results
+from matplotlib.colors import ListedColormap
+X_set, y_set = X_test, y_test
+X1, X2 = np.meshgrid(np.arange(start = X_set[:, 0].min() - 1, stop = X_set[:, 0].max() + 1, step = 0.01),
+                     np.arange(start = X_set[:, 1].min() - 1, stop = X_set[:, 1].max() + 1, step = 0.01))
+plt.contourf(X1, X2, classifier.predict(np.array([X1.ravel(), X2.ravel()]).T).reshape(X1.shape),
+             alpha = 0.75, cmap = ListedColormap(('red', 'green')))
+plt.xlim(X1.min(), X1.max())
+plt.ylim(X2.min(), X2.max())
+for i, j in enumerate(np.unique(y_set)):
+    plt.scatter(X_set[y_set == j, 0], X_set[y_set == j, 1],
+                c = ListedColormap(('red', 'green'))(i), label = j)
+plt.title('Support Vector Machine (Test set)')
+plt.xlabel('Age')
+plt.ylabel('Estimated Salary')
+plt.legend()
+plt.show()
+
+## ---  --  - How The Visualization Code Works -  --  --- ##
+#
+# Essentially, we use the prediction boundary seperater of the
+# classification model to split the screen into either 0 or 1
+# (won't buy, will buy, based on the classification prediction).
+# We, then, apply the contour so as to actually color those areas
+# red and green, respectively. Afterwhich we iterate through the
+# data and plot each point per whether they actually bought or not,
+# coloring them respectively.
